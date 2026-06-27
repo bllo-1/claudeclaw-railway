@@ -30,10 +30,16 @@ RUN bun install --frozen-lockfile || bun install
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
+# مستخدم غير root لتجاوز قيود Claude Code مع --dangerously-skip-permissions
+RUN useradd --create-home --shell /bin/bash --uid 1001 claudeclaw
+
 # مجلد البيانات الدائم (يُربط بـ Volume على Railway)
 ENV HOME=/data
 ENV CLAW_WORKDIR=/data/workspace
-RUN mkdir -p /data/.claude /data/workspace
+RUN mkdir -p /data/.claude /data/workspace \
+    && chown -R claudeclaw:claudeclaw /data /app
+
+USER claudeclaw
 
 WORKDIR /data/workspace
 ENTRYPOINT ["/app/entrypoint.sh"]
