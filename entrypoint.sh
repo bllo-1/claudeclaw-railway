@@ -105,11 +105,5 @@ if [ "${ENABLE_SLACK:-false}" = "true" ]; then
   FLAGS+=(--slack)
 fi
 
-if [ "${ENABLE_TELEGRAM:-false}" = "true" ]; then
-  if [ -z "${TELEGRAM_TOKEN:-}" ]; then echo "[entrypoint] ERROR: ENABLE_TELEGRAM=true but TELEGRAM_TOKEN is empty"; exit 1; fi
-  if [ -z "$TELEGRAM_ALLOWED_USER_IDS" ]; then echo "[entrypoint] ERROR: TELEGRAM_ALLOWED_USER_IDS required when Telegram is enabled"; exit 1; fi
-  FLAGS+=(--telegram)
-fi
-
 echo "[entrypoint] starting: bun run /app/claudeclaw/src/index.ts ${FLAGS[*]}"
 exec gosu claudeclaw bun run /app/claudeclaw/src/index.ts "${FLAGS[@]}"
