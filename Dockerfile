@@ -30,6 +30,9 @@ RUN bun install --frozen-lockfile || bun install
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
+# gosu for dropping privileges after fixing volume permissions at runtime
+RUN apt-get update && apt-get install -y --no-install-recommends gosu && rm -rf /var/lib/apt/lists/*
+
 # مستخدم غير root لتجاوز قيود Claude Code مع --dangerously-skip-permissions
 RUN useradd --create-home --shell /bin/bash --uid 1001 claudeclaw
 
@@ -39,7 +42,6 @@ ENV CLAW_WORKDIR=/data/workspace
 RUN mkdir -p /data/.claude /data/workspace \
     && chown -R claudeclaw:claudeclaw /data /app
 
-USER claudeclaw
-
+# Do NOT set USER here — entrypoint starts as root to fix volume permissions, then drops to claudeclaw via gosu
 WORKDIR /data/workspace
 ENTRYPOINT ["/app/entrypoint.sh"]
