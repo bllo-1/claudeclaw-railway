@@ -83,7 +83,7 @@ bun -e '
       listenChannels: splitList(process.env.SLACK_LISTEN_CHANNELS),
     },
     telegram: {
-      allowedUserIds: splitList(process.env.TELEGRAM_ALLOWED_USER_IDS),
+      allowedUserIds: splitList(process.env.TELEGRAM_ALLOWED_USER_IDS).map(Number),
     },
   };
   fs.writeFileSync(process.env.SETTINGS_FILE, JSON.stringify(settings, null, 2) + "\n");
