@@ -57,12 +57,14 @@ DISCORD_ALLOWED_USER_IDS="${DISCORD_ALLOWED_USER_IDS:-}"
 DISCORD_LISTEN_CHANNELS="${DISCORD_LISTEN_CHANNELS:-}"
 SLACK_ALLOWED_USER_IDS="${SLACK_ALLOWED_USER_IDS:-}"
 SLACK_LISTEN_CHANNELS="${SLACK_LISTEN_CHANNELS:-}"
+TELEGRAM_ALLOWED_USER_IDS="${TELEGRAM_ALLOWED_USER_IDS:-}"
 
 # نولّد settings.json بأمان عبر bun (يتعامل مع المصفوفات والاقتباس)
 SETTINGS_FILE="$CLAW_DIR/settings.json" \
 PORT="$PORT" HEARTBEAT_ENABLED="$HEARTBEAT_ENABLED" HEARTBEAT_INTERVAL="$HEARTBEAT_INTERVAL" \
 DISCORD_ALLOWED_USER_IDS="$DISCORD_ALLOWED_USER_IDS" DISCORD_LISTEN_CHANNELS="$DISCORD_LISTEN_CHANNELS" \
 SLACK_ALLOWED_USER_IDS="$SLACK_ALLOWED_USER_IDS" SLACK_LISTEN_CHANNELS="$SLACK_LISTEN_CHANNELS" \
+TELEGRAM_ALLOWED_USER_IDS="$TELEGRAM_ALLOWED_USER_IDS" \
 bun -e '
   const fs = require("fs");
   const splitList = (s) => (s || "").split(",").map(x => x.trim()).filter(Boolean);
@@ -79,6 +81,9 @@ bun -e '
     slack: {
       allowedUserIds: splitList(process.env.SLACK_ALLOWED_USER_IDS),
       listenChannels: splitList(process.env.SLACK_LISTEN_CHANNELS),
+    },
+    telegram: {
+      allowedUserIds: splitList(process.env.TELEGRAM_ALLOWED_USER_IDS),
     },
   };
   fs.writeFileSync(process.env.SETTINGS_FILE, JSON.stringify(settings, null, 2) + "\n");
@@ -98,6 +103,12 @@ if [ "${ENABLE_SLACK:-false}" = "true" ]; then
   if [ -z "${SLACK_BOT_TOKEN:-}" ] || [ -z "${SLACK_APP_TOKEN:-}" ]; then echo "[entrypoint] ERROR: Slack يحتاج SLACK_BOT_TOKEN و SLACK_APP_TOKEN"; exit 1; fi
   if [ -z "$SLACK_ALLOWED_USER_IDS" ]; then echo "[entrypoint] ERROR: لازم SLACK_ALLOWED_USER_IDS مع تفعيل Slack"; exit 1; fi
   FLAGS+=(--slack)
+fi
+
+if [ "${ENABLE_TELEGRAM:-false}" = "true" ]; then
+  if [ -z "${TELEGRAM_TOKEN:-}" ]; then echo "[entrypoint] ERROR: ENABLE_TELEGRAM=true but TELEGRAM_TOKEN is empty"; exit 1; fi
+  if [ -z "$TELEGRAM_ALLOWED_USER_IDS" ]; then echo "[entrypoint] ERROR: TELEGRAM_ALLOWED_USER_IDS required when Telegram is enabled"; exit 1; fi
+  FLAGS+=(--telegram)
 fi
 
 echo "[entrypoint] starting: bun run /app/claudeclaw/src/index.ts ${FLAGS[*]}"
