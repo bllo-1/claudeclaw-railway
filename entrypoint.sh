@@ -16,6 +16,14 @@ mkdir -p "$HOME/.claude" "$CLAW_DIR"
 chown -R claudeclaw:claudeclaw "$HOME" /app
 cd "$WORKDIR"
 
+# Clean up stale daemon PID/lock files from previous deployments.
+# The persistent volume retains these across container restarts, and since
+# PID 1 always exists in a container, the daemon's liveness check succeeds
+# and it refuses to start.
+find "$CLAW_DIR" -maxdepth 1 -name '*.pid' -delete 2>/dev/null || true
+find "$CLAW_DIR" -maxdepth 1 -name '*.lock' -delete 2>/dev/null || true
+find "$WORKDIR" -maxdepth 1 \( -name '.daemon.pid' -o -name 'daemon.pid' -o -name '*.lock' \) -delete 2>/dev/null || true
+
 # 1) مصادقة Claude Code — طريقتان مدعومتان:
 #    (أ) CLAUDE_CODE_OAUTH_TOKEN: توكن طويل الأمد من `claude setup-token` (المُوصى به).
 #        يمرّ تلقائياً لعملية claude الفرعية (بعد تصحيح cleanSpawnEnv في الـ Dockerfile).
