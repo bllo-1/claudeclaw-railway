@@ -10,7 +10,10 @@ HOME="${HOME:-/data}"
 WORKDIR="${CLAW_WORKDIR:-/data/workspace}"
 CLAW_DIR="$WORKDIR/.claude/claudeclaw"
 
+# Fix volume permissions — Railway volumes are mounted as root.
+# We run this as root, then drop to claudeclaw via gosu.
 mkdir -p "$HOME/.claude" "$CLAW_DIR"
+chown -R claudeclaw:claudeclaw "$HOME" /app
 cd "$WORKDIR"
 
 # 1) مصادقة Claude Code — طريقتان مدعومتان:
@@ -90,4 +93,4 @@ if [ "${ENABLE_SLACK:-false}" = "true" ]; then
 fi
 
 echo "[entrypoint] starting: bun run /app/claudeclaw/src/index.ts ${FLAGS[*]}"
-exec bun run /app/claudeclaw/src/index.ts "${FLAGS[@]}"
+exec gosu claudeclaw bun run /app/claudeclaw/src/index.ts "${FLAGS[@]}"
